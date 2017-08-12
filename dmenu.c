@@ -35,6 +35,7 @@ struct item {
 
 static char text[BUFSIZ] = "";
 static char *embed;
+static int width = 0;
 static int bh, mw, mh;
 static int inputw = 0, promptw;
 static int lrpad; /* sum of left and right padding */
@@ -605,6 +606,10 @@ setup(void)
 	promptw = (prompt && *prompt) ? TEXTW(prompt) - lrpad / 4 : 0;
 	inputw = MIN(inputw, mw/3);
 	match();
+	if (width > 0)
+		mw = width;
+	else if (width < 0)
+		mw = mw * -width / 100;
 
 	/* create menu window */
 	swa.override_redirect = True;
@@ -636,7 +641,7 @@ setup(void)
 static void
 usage(void)
 {
-	fputs("usage: dmenu [-bfiv] [-l lines] [-p prompt] [-fn font] [-m monitor]\n"
+	fputs("usage: dmenu [-bfiv] [-l lines] [-x width|%] [-p prompt] [-fn font] [-m monitor]\n"
 	      "             [-nb color] [-nf color] [-sb color] [-sf color] [-w windowid]\n", stderr);
 	exit(1);
 }
@@ -680,6 +685,13 @@ main(int argc, char *argv[])
 			colors[SchemeSel][ColFg] = argv[++i];
 		else if (!strcmp(argv[i], "-w"))   /* embedding window id */
 			embed = argv[++i];
+		else if (!strcmp(argv[i], "-x")) {   /* menu width, absolute or percentage */
+			const char *arg = argv[++i];
+			if (*arg && arg[strlen(arg)-1] == '%')
+				width = -atoi(arg);
+			else
+				width = atoi(arg);
+		}
 		else
 			usage();
 
